@@ -12,6 +12,18 @@ import pyembroidery
 
 app = Flask(__name__)
 
+@app.route("/", methods=["GET"])
+def home():
+    return jsonify({
+        "status": "ok",
+        "service": "emb-converter",
+        "message": "Servidor EMB/DST funcionando 🔥",
+        "endpoints": {
+            "health": "/health",
+            "convert": "/convert (POST)"
+        }
+    })
+
 # Límite de 10MB para archivos EMB
 app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024
 
