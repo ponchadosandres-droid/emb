@@ -1,3 +1,13 @@
+@app.route("/", methods=["GET"])
+def home():
+    return jsonify({
+        "status": "ok",
+        "message": "Servidor funcionando 🔥",
+        "endpoints": {
+            "convert": "/convert (POST)",
+            "health": "/health"
+        }
+    })
 """
 Servidor de conversión EMB → JSON para Visor DST Pro
 """
