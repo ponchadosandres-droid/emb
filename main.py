@@ -16,6 +16,17 @@ def home():
 
 @app.route("/convert", methods=["POST"])
 def convert():
+    with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as tmp:
+        file.save(tmp.name)
+        tmp_path = tmp.name
+
+    # Agregamos esta línea para forzar el cierre manual antes de leer
+    tmp.close() 
+
+    try:
+        # Ahora pyembroidery lo lee de un archivo que ya está cerrado y libre
+        pattern = pyembroidery.read(tmp_path)
+        # ... resto del código
     if "file" not in request.files:
         return jsonify({"error": "No file"}), 400
 
