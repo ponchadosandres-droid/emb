@@ -27,41 +27,52 @@ def convert():
         tmp_path = tmp.name
 
     try:
+        # Forzamos la lectura específica
         pattern = pyembroidery.read(tmp_path)
+
+        # Si pattern es None, es que pyembroidery no pudo con esa versión de EMB
+        if pattern is None:
+            return jsonify({"error": "No se pudo interpretar el archivo EMB. Intenta guardarlo como una versión más antigua en Wilcom (ej. e2 o e3)."}), 400
+
         layers = []
         current = []
 
-        for stitch in pattern.stitches:
+        # Usamos pattern.stitches de forma segura
+        stitches = getattr(pattern, 'stitches', [])
+        
+        if not stitches:
+             return jsonify({"error": "El archivo no contiene puntadas procesables."}), 400
+
+        for stitch in stitches:
             x, y, cmd = stitch
 
             if cmd == pyembroidery.COLOR_CHANGE:
                 if current:
                     layers.append(current)
                     current = []
-            
-            # Capturamos puntadas normales
             elif cmd == pyembroidery.STITCH:
                 current.append({"x": float(x), "y": float(-y)})
-            
-            # Capturamos SALTOS (Esto evita que el diseño se vea mal)
             elif cmd == pyembroidery.JUMP:
                 current.append({"x": None, "y": None})
 
         if current:
             layers.append(current)
 
-        # Calculamos los límites reales (Bounds) para que Flutter sepa centrarlo
+        # Filtro de seguridad para los límites
         all_x = [p["x"] for l in layers for p in l if p["x"] is not None]
         all_y = [p["y"] for l in layers for p in l if p["y"] is not None]
+
+        if not all_x or not all_y:
+            return jsonify({"error": "Diseño vacío o sin coordenadas válidas."}), 400
 
         return jsonify({
             "layers": layers,
             "colors": [],
             "bounds": {
-                "minX": min(all_x) if all_x else 0,
-                "minY": min(all_y) if all_y else 0,
-                "maxX": max(all_x) if all_x else 0,
-                "maxY": max(all_y) if all_y else 0
+                "minX": min(all_x),
+                "minY": min(all_y),
+                "maxX": max(all_x),
+                "maxY": max(all_y)
             },
             "totalStitches": sum(len(l) for l in layers)
         })
