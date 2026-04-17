@@ -7,6 +7,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY main.py .
 
-ENV PORT=8080
-
-CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "2", "--timeout", "30", "main:app"]
+# Dejamos que Gunicorn use la variable de entorno PORT que da Render
+CMD gunicorn --bind 0.0.0.0:$PORT --workers 2 --timeout 60 main:app
